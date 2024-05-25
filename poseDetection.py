@@ -1,67 +1,79 @@
 import tensorflow as tf
 import tensorflow_hub as hub
-import matplotlib.pyplot as plt
 import cv2
 import numpy as np
+import time
 
-def detect_and_plot(image_path):
+def detect_and_plot():
     """
-    Detect objects in an image and plot the results.
-
-    Args:
-        image_path (str): Path to the input image.
-
-    Returns:
-        None
+    Detect objects in the camera feed and display the results with FPS.
     """
 
+
+    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)  # Open the default camera
     model = hub.load("https://www.kaggle.com/models/google/movenet/TensorFlow2/multipose-lightning/1")
     movenet = model.signatures['serving_default']
+    prev_time = 0
+    fps = 0
 
+    while True:
+        start_time = time.time()  # Start measuring time for reading the frame
+        ret, frame = cap.read()
+        read_frame_time = time.time() - start_time
+        if not ret:
+            break
 
-    # Load the input image
-    image = tf.io.read_file(image_path)
-    image = tf.compat.v1.image.decode_jpeg(image, channels=3)
-    image = tf.expand_dims(image, axis=0)
+        # Preprocess the input image
+        start_time = time.time()  # Start measuring time for preprocessing
+        image = tf.expand_dims(tf.convert_to_tensor(frame, dtype=tf.uint8), axis=0)
+        image = tf.cast(tf.image.resize_with_pad(image, 256, 256), dtype=tf.int32)
+        preprocess_time = time.time() - start_time
 
-    # Resize and pad the image to keep the aspect ratio and fit the expected size
-    image = tf.cast(tf.image.resize_with_pad(image, 256, 256), dtype=tf.int32)
+        # Run model inference
+        start_time = time.time()  # Start measuring time for model inference
+        outputs = movenet(image)
+        model_inference_time = time.time() - start_time
 
-    # Download the model from TF Hub
+        keypoints = outputs['output_0']
 
+        # Process the output and display the results
+        start_time = time.time()  # Start measuring time for post-processing
+        image_np = image.numpy().squeeze()  # Remove the batch dimension
+        image_np = np.asarray(image_np, dtype=np.uint8)
 
-    # Run model inference
-    outputs = movenet(image)
-    keypoints = outputs['output_0']
+        # Calculate and display FPS
+        curr_time = time.time()
+        elapsed_time = curr_time - prev_time
+        prev_time = curr_time
+        fps = 1 / elapsed_time
+        cv2.putText(image_np, f"FPS: {fps:.2f}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
-    # Process the output and plot the results
-    image_np = image.numpy().squeeze()  # Remove the batch dimension
-    image_np = np.asarray(image_np, dtype=np.uint8)  # Convert to uint8 for plotting
+        # Plot the bounding boxes and keypoints
+        for idx in range(keypoints.shape[1]):
+            keypoint = keypoints[0, idx]
+            if keypoint[-1] > 0.5:  # Filter out low confidence detections
+                # Plot the bounding box
+                x1, y1, x2, y2 = (keypoint[51] * 256, keypoint[50] * 256,
+                                   keypoint[53] * 256, keypoint[52] * 256)
+                cv2.rectangle(image_np, (int(x1), int(y1)), (int(x2), int(y2)), (0, 0, 255), 2)
 
-    # Create a figure and axis
-    fig, ax = plt.subplots(figsize=(10, 6))
+                # Plot the keypoints
+                for i in range(0, 51, 3):
+                    x, y, score = keypoint[i + 1], keypoint[i], keypoint[i + 2]
+                    if score > 0.5:
+                        cv2.circle(image_np, (int(x * 256), int(y * 256)), 5, (0, 255, 0), -1)
 
-    # Plot the image
-    ax.imshow(cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB))
+        cv2.imshow("Output", image_np)
 
-    # Plot the bounding boxes and keypoints
-    for idx in range(keypoints.shape[1]):
-        keypoint = keypoints[0, idx]
-        if keypoint[-1] > 0.5:  # Filter out low confidence detections
-            # Plot the bounding box
-            x1, y1, x2, y2 = (keypoint[51] * 256, keypoint[50] * 256,
-                               keypoint[53] * 256, keypoint[52] * 256)
-            ax.add_patch(plt.Rectangle((x1, y1), x2 - x1, y2 - y1, fill=False, linewidth=2, edgecolor='r'))
+        post_process_time = time.time() - start_time
+        total_time = read_frame_time + preprocess_time + model_inference_time + post_process_time
+        print(f"Read frame: {read_frame_time:.3f} s, Preprocess: {preprocess_time:.3f} s, Model Inference: {model_inference_time:.3f} s, Post-process: {post_process_time:.3f} s, Total: {total_time:.3f} s")
 
-            # Plot the keypoints
-            for i in range(0, 51, 3):
-                x, y, score = keypoint[i + 1], keypoint[i], keypoint[i + 2]
-                if score > 0.5:
-                    ax.scatter(x * 256, y * 256, s=10, c='g')
+        # Press 'q' to quit
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+        
+    cap.release()
+    cv2.destroyAllWindows()
 
-    plt.show()
-    
-
-detect_and_plot('squat.jpeg')
-
-cv2.waitKey(0)
+detect_and_plot()
