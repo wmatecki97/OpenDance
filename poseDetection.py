@@ -5,6 +5,11 @@ import tensorflow_hub as hub
 import cv2
 import numpy as np
 
+class Person:
+    keypoints = []
+    rectangle:(int, int, int, int) = (0, 0, 0, 0)
+
+
 class MoveNetDetector:
     def __init__(self, model_path='model', verbose=True):
         self.verbose = verbose
@@ -40,22 +45,28 @@ class MoveNetDetector:
         image_np = image.numpy().squeeze()
         image_np = np.asarray(image_np, dtype=np.uint8)
         image_height, image_width, _ = image_np.shape
-
-        if plot:
-            for idx in range(keypoints.shape[1]):
-                keypoint = keypoints[0, idx]
-                if keypoint[-1] > 0.1:
-                    x1, y1, x2, y2 = (keypoint[52] * image_width, keypoint[51] * image_height,
-                                    keypoint[54] * image_width, keypoint[53] * image_height)
+        people = []
+        for idx in range(keypoints.shape[1]):
+            keypoint = keypoints[0, idx]
+            if keypoint[-1] > 0.1:
+                person = Person()
+                x1, y1, x2, y2 = (keypoint[52] * image_width, keypoint[51] * image_height,
+                                keypoint[54] * image_width, keypoint[53] * image_height)
+        
+                if plot:
                     cv2.rectangle(image_np, (int(x1), int(y1)), (int(x2), int(y2)), (0, 0, 255), 2)
+                person.rectangle = (x1, y1, x2, y2)
+                for i in range(0, 51, 3):
+                    x, y, score = keypoint[i + 1], keypoint[i], keypoint[i + 2]
+                    person.keypoints.append((x,y,score))
 
-                    for i in range(0, 51, 3):
-                        x, y, score = keypoint[i + 1], keypoint[i], keypoint[i + 2]
-                        if score > 0.1:
-                            cv2.circle(image_np, (int(x * image_width), int(y * image_height)), 5, (0, 255, 0), -1)
+                    if score > 0.1 and plot:
+                        cv2.circle(image_np, (int(x * image_width), int(y * image_height)), 5, (0, 255, 0), -1)
+                people.append(person)
 
         post_process_time = time.time() - start_time
         if self.verbose:
             print(f"Post-process: {post_process_time:.3f} s")
-
-        return image_np
+        if plot:
+            cv2.imshow("Output", image_np)
+        return people
