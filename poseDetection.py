@@ -1,13 +1,16 @@
 import os
 import time
+from typing import List, Tuple
+from pydantic import BaseModel
 import tensorflow as tf
 import tensorflow_hub as hub
 import cv2
 import numpy as np
 
-class Person:
-    keypoints = []
-    rectangle:(int, int, int, int) = (0, 0, 0, 0)
+class Person(BaseModel):
+    keypoints: List[Tuple[int, int, int, int]] = []
+    rectangle:Tuple[int, int, int, int] = (0, 0, 0, 0)
+    probability: float = 0.0
 
 
 class MoveNetDetector:
@@ -49,7 +52,7 @@ class MoveNetDetector:
         for idx in range(keypoints.shape[1]):
             keypoint = keypoints[0, idx]
             if keypoint[-1] > 0.1:
-                person = Person()
+                person = Person(probability=keypoint[-1])
                 x1, y1, x2, y2 = (keypoint[52] * image_width, keypoint[51] * image_height,
                                 keypoint[54] * image_width, keypoint[53] * image_height)
         
