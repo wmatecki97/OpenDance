@@ -12,7 +12,7 @@ class Person(BaseModel):
     rectangle:Tuple[int, int, int, int] = (0, 0, 0, 0)
     probability: float = 0.0
 
-
+verify = True
 class MoveNetDetector:
     def __init__(self, model_path='model', verbose=True):
         self.verbose = verbose
@@ -63,7 +63,7 @@ class MoveNetDetector:
                     x, y, score = keypoint[i + 1], keypoint[i], keypoint[i + 2]
                     person.keypoints.append((x,y,score))
 
-                    if score > 0.1 and plot:
+                    if score > 0.1 and not verify or i==5*3 or i==11*3:
                         cv2.circle(image_np, (int(x * image_width), int(y * image_height)), 5, (0, 255, 0), -1)
                 people.append(person)
 
