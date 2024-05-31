@@ -1,3 +1,4 @@
+from cv2 import sqrt
 import numpy as np
 import math
 
@@ -26,7 +27,10 @@ class DifferenceCalculator:
             x, y, prob = tensor[i]
             dx = x - hip_x
             dy = y - hip_y
-            tensor_polar[i] = np.arctan2(dy, dx), np.hypot(dx, dy) / shoulder_to_hip_dist, prob
+            if dx == 0:
+                tensor_polar[i] = 0, np.hypot(dx, dy) / shoulder_to_hip_dist, prob
+            else:
+                tensor_polar[i] = (y - hip_y) / (x - hip_x) /2+0.5 , np.hypot(dx, dy) / shoulder_to_hip_dist, prob
 
         return tensor_polar
 
@@ -44,9 +48,35 @@ class DifferenceCalculator:
         tensor1_polar = DifferenceCalculator.convert_to_polar(tensor1)
         tensor2_polar = DifferenceCalculator.convert_to_polar(tensor2)
 
+        angle_diff = 0
+        dist_diff = 0
+        total_diff = 0
         # Calculate the total difference
-        angle_diff = np.sum(np.abs(tensor1_polar[ :, 0] - tensor2_polar[ :, 0]))
-        dist_diff = np.sum(np.abs(tensor1_polar[ :, 1] - tensor2_polar[ :, 1]))
-        total_diff = angle_diff + dist_diff
+        for i in range(len(tensor1_polar)):
+            if tensor1_polar[i][2] > 0.1 and tensor2_polar[i][2]> 0.1 and i != 1 and  i!=  2 and i != 3 and i != 4:
+                #find the coordinates of the 2 points on the lines with the formula y=a*x+b and calculate teh distance between them
+                #b we set to 0
+                #a is tensor[i][0]
+                #distance is tensor[i][1]
 
-        return total_diff
+                def points_at_distance(a, z):
+                    # Calculate the x and y coordinates
+                    x = z / math.sqrt(1 + a**2)
+                    y = a * x
+                    # Points (x, y) and (-x, -y) are z distance from the origin
+                    return (abs(x), abs(y))
+    
+                a1 = tensor1_polar[i][0]
+                a2 = tensor2_polar[i][0]
+                distance1 = tensor1_polar[i][1]
+                distance2 = tensor2_polar[i][1]
+                x1, y1 = points_at_distance(a1, distance1)
+                x2, y2 = points_at_distance(a2, distance2)
+
+                distance_between_points = math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
+                
+                total_diff+=min(1, distance_between_points)#maximum penalty is 1
+
+        max_diff = 2 * len(tensor1_polar)
+        score =  (max_diff-total_diff)/max_diff
+        return score
