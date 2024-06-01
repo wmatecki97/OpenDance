@@ -52,8 +52,9 @@ class DifferenceCalculator:
         dist_diff = 0
         total_diff = 0
         # Calculate the total difference
+        valid_points = 0
         for i in range(len(tensor1_polar)):
-            if tensor1_polar[i][2] > 0.1 and tensor2_polar[i][2]> 0.1 and i != 1 and  i!=  2 and i != 3 and i != 4:
+            if tensor1_polar[i][2] > 0.1 and tensor2_polar[i][2]> 0.3 and i != 1 and  i!=  2 and i != 3 and i != 4:
                 #find the coordinates of the 2 points on the lines with the formula y=a*x+b and calculate teh distance between them
                 #b we set to 0
                 #a is tensor[i][0]
@@ -75,8 +76,9 @@ class DifferenceCalculator:
 
                 distance_between_points = math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
                 
-                total_diff+=min(1, distance_between_points)#maximum penalty is 1
-
+                total_diff+=distance_between_points#maximum penalty is 1
+                valid_points+=1
+        average_diff=total_diff/valid_points
         max_diff = 2 * len(tensor1_polar)
-        score =  (max_diff-total_diff)/max_diff
+        score =  (max_diff-total_diff)/max_diff-0.8
         return score

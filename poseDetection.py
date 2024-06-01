@@ -28,8 +28,25 @@ class MoveNetDetector:
         image = tf.expand_dims(tf.convert_to_tensor(image, dtype=tf.uint8), axis=0)
         image = tf.cast(tf.image.resize_with_pad(image, 256, 256), dtype=tf.int32)
         return image
+    
+    def reverse_preprocess_coords(self, rect, cam_w, cam_h):
+        # Preprocessed image dimensions
+        preprocessed_size = 256
+        
+        # Calculate the scaling factors
+        scale_x = (cam_w) / preprocessed_size
+        scale_y = (cam_h) / preprocessed_size
+        
+        # Reverse the preprocessing scaling and padding
+        x1 = int((1-rect[0]) * preprocessed_size * scale_x)
+        y1 = int(rect[1] * preprocessed_size * scale_y)
+        x2 = int((1-rect[2]) * preprocessed_size * scale_x)
+        y2 = int(rect[3] * preprocessed_size * scale_y)
+        
+        return x1, y1, x2, y2
 
     def detect_and_plot(self, image, plot=True):
+        cam_h, cam_w, _ = image.shape
         start_time = time.time()
         image = self.preprocess_image(image)
         preprocess_time = time.time() - start_time
@@ -53,12 +70,14 @@ class MoveNetDetector:
             keypoint = keypoints[0, idx]
             if keypoint[-1] > 0.1:
                 person = Person(probability=keypoint[-1])
-                x1, y1, x2, y2 = (keypoint[52] * image_width, keypoint[51] * image_height,
-                                keypoint[54] * image_width, keypoint[53] * image_height)
+                x1, y1, x2, y2 = (keypoint[52], keypoint[51],
+                                keypoint[54], keypoint[53])
         
                 if plot:
-                    cv2.rectangle(image_np, (int(x1), int(y1)), (int(x2), int(y2)), (0, 0, 255), 2)
-                person.rectangle = (x1, y1, x2, y2)
+                    cv2.rectangle(image_np, (int(x1*image_width), int(y1*image_height)), (int(x2*image_width), int(y2*image_height)), (0, 0, 255), 2)
+                
+                original_image_rect = self.reverse_preprocess_coords((x1, y1, x2, y2), cam_w, cam_h)
+                person.rectangle = original_image_rect
                 for i in range(0, 51, 3):
                     x, y, score = keypoint[i + 1], keypoint[i], keypoint[i + 2]
                     person.keypoints.append((x,y,score))
