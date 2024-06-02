@@ -78,7 +78,8 @@ class DifferenceCalculator:
                 
                 total_diff+=distance_between_points#maximum penalty is 1
                 valid_points+=1
-        average_diff=total_diff/valid_points
+
+        average_diff=total_diff/max(valid_points,1)
         max_diff = 2 * len(tensor1_polar)
-        score =  (max_diff-total_diff)/max_diff-0.8
-        return score
+        score =  (max_diff-total_diff)/max_diff
+        return average_diff

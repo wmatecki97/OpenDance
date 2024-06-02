@@ -1,3 +1,4 @@
+import os
 import time
 from typing import List
 import cv2
@@ -25,10 +26,15 @@ scores = []
 detection_in_progress=False
 
 def get_points_by_difference_score(score):
-    if score > 0.9:
+    print(score)
+    if score < 0.1:
+        return 2
+    elif score < 0.2:
         return 1
-    elif score > 0.8:
+    elif score < 0.3:
         return 0.5
+    else:
+        return 0
 
 def compare_frames(frame_video):
     global scores  # Declare scores as global to modify it within the function
@@ -39,7 +45,8 @@ def compare_frames(frame_video):
         ret_cam, frame_cam = cap.read()
     ret_cam, frame_cam = cap.read()
     frame_cam = cv2.flip(frame_cam, 1)
-
+    
+    # os.makedirs('compare', exist_ok=True)
     # cv2.imwrite(f'compare/{frame_counter}.jpg', frame_cam)
     # cv2.imwrite(f'compare/{frame_counter}_vid.jpg', frame_video)
     # Detect and plot the results for the camera frame
@@ -50,11 +57,11 @@ def compare_frames(frame_video):
     if len(outputPersons) > 0 and len(outputVideo) > 0:
         for i in range(min(len(outputPersons), len(scores))):
             diff_value = DifferenceCalculator.total_difference(outputPersons[i].keypoints, outputVideo[0].keypoints)
-            scores[i] += diff_value
+            scores[i] += get_points_by_difference_score(diff_value)
         if len(outputPersons) > len(scores):
             for i in range(len(scores), len(outputPersons)):
                 diff_value = DifferenceCalculator.total_difference(outputPersons[i].keypoints, outputVideo[0].keypoints)
-                scores.append(diff_value*100)
+                scores.append(get_points_by_difference_score(diff_value))
 
         print(f"Scores: {scores}")
     detection_in_progress=False
@@ -94,7 +101,7 @@ start_time = time.time()
 player = MediaPlayer(video_path)
 
 # Initialize camera capture
-camera = cv2.VideoCapture(0)
+camera = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 
 # Create a named window and set it to fullscreen
 cv2.namedWindow('Video', cv2.WINDOW_NORMAL)
@@ -106,6 +113,8 @@ detection_in_progress = False
 while True:
     ret_video, frame_video = video.read()
     ret_camera, frame_camera = camera.read()
+    frame_camera = cv2.flip(frame_camera, 1)
+    clean_video_frame = frame_video.copy()
     if not ret_video or not ret_camera:
         break
 
@@ -121,21 +130,20 @@ while True:
         x1, y1, x2, y2 = rect
 
         # Add padding
-        padding = 80
-        x1 = min(0, x1 + padding)
+        padding = 30
+        x1 = max(0, x1 - padding)
         y1 = max(0, y1 - padding)
-        x2 = max(cam_w, x2 - padding)
+        x2 = min(cam_w, x2 + padding)
         y2 = min(cam_h, y2 + padding)
 
         # Crop the camera frame
-        cropped_camera_frame = frame_camera[y1:y2, x2:x1]
+        cropped_camera_frame = frame_camera[y1:y2, x1:x2]
 
         # Resize cropped frame to 160x120 with padding
         small_cropped_frame = resize_and_pad(cropped_camera_frame, (160, 120))
-        small_cropped_frame = cv2.flip(small_cropped_frame, 1)
         
         # Define the position for the small cropped camera frame
-        top_left_y = frame_video.shape[0] - small_cropped_frame.shape[0] - 10  # 10 pixels from bottom
+        top_left_y = max(0,frame_video.shape[0] - small_cropped_frame.shape[0] - 10 ) # 10 pixels from bottom
         top_left_x = 10  # 10 pixels from left
 
         # Overlay the small cropped camera frame on the video frame
@@ -148,7 +156,7 @@ while True:
 
     # Display the scores on the video frame
     for i in range(min(len(scores), 6)):
-        text = f"Score {i + 1}: {int(scores[i])}"
+        text = f"Score {i + 1}: {scores[i]}"
         cv2.putText(frame_video, text, (100, 300 + i * 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
 
     # Display the video frame
@@ -157,7 +165,7 @@ while True:
     if frame_counter % 15 == 0:
         if not detection_in_progress:
             detection_in_progress = True
-            thread = threading.Thread(target=compare_frames, args=(frame_video,))
+            thread = threading.Thread(target=compare_frames, args=(clean_video_frame,))
             thread.start()
 
     frame_counter += 1

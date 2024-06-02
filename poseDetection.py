@@ -38,9 +38,9 @@ class MoveNetDetector:
         scale_y = (cam_h) / preprocessed_size
         
         # Reverse the preprocessing scaling and padding
-        x1 = int((1-rect[0]) * preprocessed_size * scale_x)
+        x1 = int((rect[0]) * preprocessed_size * scale_x)
         y1 = int(rect[1] * preprocessed_size * scale_y)
-        x2 = int((1-rect[2]) * preprocessed_size * scale_x)
+        x2 = int((rect[2]) * preprocessed_size * scale_x)
         y2 = int(rect[3] * preprocessed_size * scale_y)
         
         return x1, y1, x2, y2

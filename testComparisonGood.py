@@ -18,8 +18,8 @@ detector = MoveNetDetector(verbose=False)
 #     print(f"Difference: {diff_value}")
 
 
-frame_cam = cv2.imread('compare/771.jpg')
-frame_video = cv2.imread('compare/232_vid.jpg')
+frame_cam = cv2.imread('C:/Users/Wiktor/OneDrive/Pulpit/temp/diff_calc_data/great/352_vid.jpg')
+frame_video = cv2.imread('C:/Users/Wiktor/OneDrive/Pulpit/temp/diff_calc_data/great/351.jpg')
 
 outputPerson = detector.detect_and_plot(frame_cam, plot=True)
 
@@ -30,8 +30,8 @@ if len(outputPerson) > 0 and len(outputVideo) > 0:
     diff_value = DifferenceCalculator.total_difference(outputPerson[0].keypoints, outputVideo[0].keypoints)
     print(f"Difference: {diff_value}")
 
-frame_cam = cv2.imread('compare/771.jpg')
-frame_video = cv2.imread('compare/772_vid.jpg')
+frame_cam = cv2.imread('C:/Users/Wiktor/OneDrive/Pulpit/temp/diff_calc_data/great/382_vid.jpg')
+frame_video = cv2.imread('C:/Users/Wiktor/OneDrive/Pulpit/temp/diff_calc_data/great/381.jpg')
 
 outputPerson = detector.detect_and_plot(frame_cam, plot=True)
 
@@ -42,8 +42,8 @@ if len(outputPerson) > 0 and len(outputVideo) > 0:
     diff_value = DifferenceCalculator.total_difference(outputPerson[0].keypoints, outputVideo[0].keypoints)
     print(f"Difference: {diff_value}")
 
-frame_cam = cv2.imread('compare/771.jpg')
-frame_video = cv2.imread('compare/892_vid.jpg')
+frame_cam = cv2.imread('C:/Users/Wiktor/OneDrive/Pulpit/temp/diff_calc_data/great/412_vid.jpg')
+frame_video = cv2.imread('C:/Users/Wiktor/OneDrive/Pulpit/temp/diff_calc_data/great/411.jpg')
 
 outputPerson = detector.detect_and_plot(frame_cam, plot=True)
 
@@ -54,8 +54,8 @@ if len(outputPerson) > 0 and len(outputVideo) > 0:
     diff_value = DifferenceCalculator.total_difference(outputPerson[0].keypoints, outputVideo[0].keypoints)
     print(f"Difference: {diff_value}")
 
-frame_cam = cv2.imread('compare/771.jpg')
-frame_video = cv2.imread('compare/232_vid.jpg')
+frame_cam = cv2.imread('C:/Users/Wiktor/OneDrive/Pulpit/temp/diff_calc_data/great/442_vid.jpg')
+frame_video = cv2.imread('C:/Users/Wiktor/OneDrive/Pulpit/temp/diff_calc_data/great/441.jpg')
 
 outputPerson = detector.detect_and_plot(frame_cam, plot=True)
 
@@ -66,8 +66,19 @@ if len(outputPerson) > 0 and len(outputVideo) > 0:
     diff_value = DifferenceCalculator.total_difference(outputPerson[0].keypoints, outputVideo[0].keypoints)
     print(f"Difference: {diff_value}")
 
-frame_cam = cv2.imread('compare/771.jpg')
-frame_video = cv2.imread('compare/502_vid.jpg')
+frame_cam = cv2.imread('C:/Users/Wiktor/OneDrive/Pulpit/temp/diff_calc_data/great/352_vid.jpg')
+frame_video = cv2.imread('C:/Users/Wiktor/OneDrive/Pulpit/temp/diff_calc_data/great/351.jpg')
+outputPerson = detector.detect_and_plot(frame_cam, plot=True)
+
+# Detect and plot the results for the video frame
+outputVideo = detector.detect_and_plot(frame_video, plot=False)
+
+if len(outputPerson) > 0 and len(outputVideo) > 0:
+    diff_value = DifferenceCalculator.total_difference(outputPerson[0].keypoints, outputVideo[0].keypoints)
+    print(f"Difference: {diff_value}")
+
+frame_cam = cv2.imread('C:/Users/Wiktor/OneDrive/Pulpit/temp/diff_calc_data/great/352_vid.jpg')
+frame_video = cv2.imread('C:/Users/Wiktor/OneDrive/Pulpit/temp/diff_calc_data/great/351.jpg')
 
 outputPerson = detector.detect_and_plot(frame_cam, plot=True)
 
@@ -78,20 +89,8 @@ if len(outputPerson) > 0 and len(outputVideo) > 0:
     diff_value = DifferenceCalculator.total_difference(outputPerson[0].keypoints, outputVideo[0].keypoints)
     print(f"Difference: {diff_value}")
 
-frame_cam = cv2.imread('compare/771.jpg')
-frame_video = cv2.imread('compare/1792_vid.jpg')
-
-outputPerson = detector.detect_and_plot(frame_cam, plot=True)
-
-# Detect and plot the results for the video frame
-outputVideo = detector.detect_and_plot(frame_video, plot=False)
-
-if len(outputPerson) > 0 and len(outputVideo) > 0:
-    diff_value = DifferenceCalculator.total_difference(outputPerson[0].keypoints, outputVideo[0].keypoints)
-    print(f"Difference: {diff_value}")
-
-frame_cam = cv2.imread('compare/771.jpg')
-frame_video = cv2.imread('compare/1822_vid.jpg')
+frame_cam = cv2.imread('C:/Users/Wiktor/OneDrive/Pulpit/temp/diff_calc_data/great/352_vid.jpg')
+frame_video = cv2.imread('C:/Users/Wiktor/OneDrive/Pulpit/temp/diff_calc_data/great/351.jpg')
 
 outputPerson = detector.detect_and_plot(frame_cam, plot=True)
 
